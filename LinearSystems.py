@@ -3,13 +3,14 @@ from copy import deepcopy
 
 
 
-class LinearSystemSolver():
+class LinearSystem():
 
     def __init__(self, A, b):
         self.M = deepcopy(A)
         self.n, self.m = np.shape(A)
         if self.n != self.m:
             return print("No square matrix provided")
+        
         self.b = deepcopy(b)
         self.x = np.ones(len(b))
         self.Mult = np.zeros((self.n, self.n))
@@ -37,17 +38,13 @@ class LinearSystemSolver():
         if isinstance(b_vec, np.ndarray):
             self.b = b_vec
         
+        # Forward substitution
         for i in range(0, self.n):
             self.x[i] = (self.b[i] - np.sum([self.L[i,k]*self.x[k] for k in range(i)])) / self.L[i,i]
 
-        """
-        for i in range(self.n):
-            self.x[i] = self.b[i]
-            for j in range(i):
-                self.x[i] -= self.L[i,j] * self.x[j]
-            self.x[i] /= self.L[i,i]
-        """
         return self.x
+
+    ########################################
 
     def U_system(self, U_mat=False, b_vec=False):
         """
@@ -62,24 +59,15 @@ class LinearSystemSolver():
             self.U = U_mat
         if isinstance(b_vec, np.ndarray):
             self.b = b_vec
-        """
-        b1 = deepcopy(np.flip(self.b, axis=0))
-        U1 = deepcopy(np.flip(self.U, axis=0))
-        U2 = deepcopy(np.flip(U1, axis=1)) # lower triangular matrix
-        self.b = b1
-        #print(U2)
-        x = self.L_system(U2)
-        self.x = deepcopy(np.flip(x, axis=0))
-        self.b = deepcopy(np.flip(b1, axis=0))
-    
-        """
-        self.x[self.n-1] = self.b[self.n-1]/self.U[self.n-1,self.n-1]
         
+        # Backward substitution
+        self.x[self.n-1] = self.b[self.n-1]/self.U[self.n-1,self.n-1]
         for i in range(self.n-2,-1,-1):
             self.x[i] = (self.b[i]-np.sum([self.U[i,k]*self.x[k] for k in range(i+1, self.n)]))/self.U[i,i]
         
         return self.x
     
+    ########################################    
 
     def GaussElimination(self, piv=False, total=False):
         """
@@ -104,11 +92,11 @@ class LinearSystemSolver():
             
             # Perform partial pivoting if diag el == 0
             if piv and not total and A[k,k] == 0:
-                self.P_partial()
+                self.P_partial(k)
             
             # Perform total pivoting if diag el == 0
             if piv and total and A[k,k] == 0:
-                self.P_total()
+                self.P_total(k)
 
             # Perform elimination
             for i in range(k+1, self.n):
@@ -122,29 +110,22 @@ class LinearSystemSolver():
         self.U = A
         return self.U_system()
     
-
-    def P_partial(self):
+    def P_partial(self, k):
         """
         Method for partial pivoting.
         """
         A = self.M
         b = self.b
 
-        for i in range(self.n):
-            # Find maximum pivot element in current column
-            max_val = abs(A[i][i])
-            max_row = i
-            for k in range(i + 1, self.n):
-                if abs(A[k][i]) > max_val:
-                    max_val = abs(A[k][i])
-                    max_row = k
+        # Find maximum pivot element in current column
+        max_index = np.argmax(np.abs(A[k:, k])) + k
 
         # Swapping rows
-        A[i], A[max_row] = A[max_row], A[i]
-        b[i], b[max_row] = b[max_row], b[i]
+        if max_index != k:
+            A[[k, max_index]] = A[[max_index, k]]
+            b[[k, max_index]] = b[[max_index, k]]
     
-
-    def P_total(self, A, b):
+    def P_total(self, k):
         """
         Method for total pivoting.
         """
@@ -154,22 +135,20 @@ class LinearSystemSolver():
         # Create an array to store the pivot indices
         pivots = np.arange(self.n)
 
-        for k in range(self.n-1):
-            # Find the maximum element in the remaining submatrix
-            max_val = 0
-            max_row, max_col = k, k
+        # Find the indices of the maximum element in the entire submatrix A[k:, k:]
+        max_index = np.unravel_index(np.argmax(np.abs(A[k:, k:])), A[k:, k:].shape)
+        # Adjust the indices to account for the offset
+        max_index = (max_index[0] + k, max_index[1] + k)
 
-            for i in range(k, self.n):
-                for j in range(k, self.n):
-                    if abs(A[i][j]) > max_val:
-                        max_val = abs(A[i][j])
-                        max_row, max_col = i, j
+        # Swap rows and columns if necessary
+        if max_index[0] != k:
+            A[[k, max_index[0]]] = A[[max_index[0], k]]
+            b[[k, max_index[0]]] = b[[max_index[0], k]]
 
-            # Swapping the rows and columns based on the maximum element
-            A[[k, max_row]] = A[[max_row, k]]
-            A[:, [k, max_col]] = A[:, [max_col, k]]
-            b[[k, max_row]] = b[[max_row, k]]
-            pivots[[k, max_col]] = pivots[[max_col, k]]
+        if max_index[1] != k:
+            A[:, [k, max_index[1]]] = A[:, [max_index[1], k]]
+
+    ########################################
 
     def Cholesky(self):
         """
@@ -182,11 +161,7 @@ class LinearSystemSolver():
         """
         self.L = np.zeros_like(self.M)        
         
-        # initialize first element
-        #self.L[0,0] = np.sqrt(self.M[0,0])
-
         # Computing L matrix
-
         for i in range(self.n):
             for j in range(i+1):
                 sum = np.sum([self.L[i,k]*self.L[j,k] for k in range(j+1)])
@@ -203,6 +178,8 @@ class LinearSystemSolver():
         self.b = b
 
         return self.x
+    
+    ########################################
 
     def Thomas(self):
         """
@@ -255,7 +232,7 @@ class LinearSystemSolver():
     ########################################################################################
     # ITERATIVE METHODS FOR LINEAR SYSTEMS
 
-    def Jacobi(self, x0, tol=1e-3, max_iter=100):
+    def Jacobi(self, x0, tol=1e-3, max_iter=500):
         """
         Method for solving a linear system with Jacobi algorithm.
         INPUTS:
@@ -271,23 +248,22 @@ class LinearSystemSolver():
         self.x0 = x0
         self.tol = tol
         self.max_iter = max_iter
-        #self.rho = np.max(np.abs(np.linalg.eigvals(np.identity(self.n)-np.inv(np.diag(np.diag(self.M)).dot(self.M)))))
         
-        D_inv = np.linalg.inv(np.diag(np.diag(self.M)))
-        J = self.M - D_inv
+        # Compute the inverse of the diagonal matrix D
+        D = np.diag(np.diag(self.M))
+        D_inv = np.linalg.inv(D)
+
+        # Jacobi iterative matrix
+        J = self.M - D
+
+        # Initialization
         x = x0
-        x_new = J @ x + D_inv @ self.b
+        x_new = D_inv @ (self.b - J @ x)
         self.iter_count = 0
         self.res = np.linalg.norm(self.b - np.dot(self.M, x))
         self.error = np.inf
         
         while self.error > tol and self.iter_count < max_iter:
-            """
-            for i in range(self.n):
-                s = np.sum([self.M[i,j]*x[j] for j in range(self.n) if j != i])
-                x_new[i] = (self.b[i] - s) / self.M[i][i]
-
-            """
             x = x_new.copy()
             x_new = J @ x + D_inv @ self.b
             self.res = np.linalg.norm(self.b - np.dot(self.M, x_new))           
@@ -298,6 +274,8 @@ class LinearSystemSolver():
 
         self.x = x
         return x
+    
+    ########################################
 
     def GaussSeidel(self,  x0, tol=1e-3, max_iter=100):
         """
@@ -348,7 +326,8 @@ class LinearSystemSolver():
 
         self.x = x
         return x
-
+    
+    ########################################
 
     def GramSchmidt(self):
         """
@@ -378,6 +357,7 @@ class LinearSystemSolver():
 
         return self.x, self.Q, self.R
 
+    ########################################
 
     def Householder(self):
         """
@@ -407,6 +387,7 @@ class LinearSystemSolver():
 
         return self.x, self.Q.T, self.R
 
+    ########################################
 
     def GivenRotation(self):
         self.Q = np.eye(self.m)
@@ -429,6 +410,7 @@ class LinearSystemSolver():
 
         return self.x, self.Q.T, self.R
     
+    ########################################
 
     def LeastSquaresNormal(self):
         """
@@ -458,8 +440,6 @@ class LinearSystemSolver():
         self.b = b
         return self.x
 
-
-
     ################################################################################################
     # EVALUATION MATRIX
 
@@ -480,7 +460,6 @@ class LinearSystemSolver():
         """
         Method for checking if a matrix is diagonally dominant.
         """
-
         for i in range(self.n):
             if self.M[i,i] <= np.sum(np.abs(self.M[i,:])) - np.abs(self.M[i,i]):
                 return print("Matrix NOT diagonally dominant")
@@ -489,8 +468,6 @@ class LinearSystemSolver():
     
     def Get_Spectral_Radius(self, A):
         return np.max(np.abs(np.linalg.eigvals(A)))
-
-
 
 
 

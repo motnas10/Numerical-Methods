@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
-from LinearSystemSolver import LinearSystemSolver
+from LinearSystems import LinearSystem
 
 
 
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     #H = hilbert_matrix(5000)
     #bh = np.sum(H, axis=1)
     """
-
+    """
     # LOWER TRIANGULAR MATRIX
     
     print("LOEWER TRIANGULAR MATRIX - TEST")
@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     b = np.array([1,2,3,4])
 
-    solver = LinearSystemSolver(L, b)
+    solver = LinearSystem(L, b)
     sol = solver.L_system(L)
 
     print(f"Matrix:\n{L}")
@@ -65,6 +65,7 @@ if __name__ == "__main__":
     #print(f"error:\n{solver.error}")
     print(f"Residual:\n{solver.Residual()}")
 
+    
     # UPPER TRIANGULAR MATRIX
     
     print("UPPER TRIANGULAR MATRIX - TEST")
@@ -75,7 +76,7 @@ if __name__ == "__main__":
 
     b = np.array([4,3,2,1])
 
-    solver = LinearSystemSolver(U, b)
+    solver = LinearSystem(U, b)
     sol = solver.U_system(U)
 
     print(f"Matrix:\n{U}")
@@ -88,7 +89,7 @@ if __name__ == "__main__":
     #print(f"error:\n{solver.error}")
     print(f"Residual:\n{solver.Residual()}")
 
-
+    
     # GAUSSIAN ELIMINATION
 
     print("GAUSSIAN ELIMINATION - TEST")
@@ -100,8 +101,8 @@ if __name__ == "__main__":
     A = np.diag(d) + np.diag(dl, -1) + np.diag(du, 1)
     b = np.array([4,6,6,6,3])
 
-    solver = LinearSystemSolver(A, b)
-    sol = solver.GaussElimination()
+    solver = LinearSystem(A, b)
+    sol = solver.GaussElimination(total=True)
         
 
     print(f"Matrix:\n{A}")
@@ -114,7 +115,7 @@ if __name__ == "__main__":
     #print(f"error:\n{solver.error}")
     print(f"Residual:\n{solver.Residual()}")
 
-
+    """
     # CHOLESKY
 
     print("CHOLESKY - TEST")
@@ -126,7 +127,7 @@ if __name__ == "__main__":
     
     b = np.array([4,7,9,10])
 
-    solver = LinearSystemSolver(A, b)
+    solver = LinearSystem(A, b)
     sol = solver.Cholesky()        
 
 
@@ -140,4 +141,3 @@ if __name__ == "__main__":
     #print(f"error:\n{solver.error}")
     print(f"Residual:\n{solver.Residual()}")
 
-    

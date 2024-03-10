@@ -1,12 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
-from LinearSystemSolver import LinearSystemSolver
+from LinearSystems import LinearSystem
+
 
 
 
 if __name__ == "__main__":
-     
+    """
     # TEST FOR THOMAS ALGORTIHM
     print("THOMAS - TEST")
     
@@ -18,7 +19,7 @@ if __name__ == "__main__":
     A = np.diag(d) + np.diag(dl, -1) + np.diag(du, 1)
     b = np.array([4,6,6,6,3])
 
-    solver = LinearSystemSolver(A, b)
+    solver = LinearSystem(A, b)
     sol = solver.Thomas()
         
 
@@ -32,6 +33,7 @@ if __name__ == "__main__":
     #print(f"error:\n{solver.error}")
     print(f"Residual:\n{solver.Residual()}")
 
+    """
 
     # TEST FOR JACOBI ALGORITHM
     print("JACOBI - TEST")
@@ -41,11 +43,18 @@ if __name__ == "__main__":
                   [1,2,3,3],
                   [1,2,3,4]])
     
+    A = np.array([[4, -1, 0, 0],
+                  [-1, 4, -1, 0],
+                  [0, -1, 4, -1],
+                  [0, 0, -1, 3]])
+
     b = np.array([4,7,9,10])
+    
+    b = np.array([15, 10, 10, 10])
 
     x0 = np.array([2,2,2,2])
 
-    solver = LinearSystemSolver(A, b)
+    solver = LinearSystem(A, b)
     sol = solver.Jacobi(x0)
         
 
@@ -56,34 +65,30 @@ if __name__ == "__main__":
     print(f"iter:\n{solver.iter_count}")
     print(f"error:\n{solver.error}")
     print(f"Residual:\n{solver.Residual()}")
+    
+    """
+    # TEST FOR GAUSS-SEIDEL ALGORITHM
+    print("GAUSS-SEIDEL - TEST")
+
+    A = np.array([[1,1,1,1],
+                  [1,2,2,2],
+                  [1,2,3,3],
+                  [1,2,3,4]])
+    
+    b = np.array([4,7,9,10])
+
+    x0 = np.array([2,2,2,2])
+
+    solver = LinearSystem(A, b)
+    sol = solver.GaussSeidel(x0)
+
+    print(f"Matrix:\n{A}")
+    print(f"Note:\n{b}")
+    print(f"x solution:\n{sol}")
+    print(f"Condition number:\n{solver.ConditionNumber()}")
+    print(f"iter:\n{solver.iter_count}")
+    print(f"error:\n{solver.error}")
+    print(f"Residual:\n{solver.Residual()}")
 
     """
-    # EXERCIZE 2.2
 
-    # -u''(x) = pi^2 * sen(pi*x)     for x in [0,1]
-    # u(0) = u(1) = 0
-
-    def f(x):
-        return np.pi**2 * np.sin(np.pi*x)
-
-    dx = 1.e-2
-    x = np.arange(0, 1+dx, dx)
-
-    A = np.array([[1,    0,   0],
-                  [-dx,  1,   0],
-                  [0,    -dx, 1]])
-    
-    b = np.array([0, 0, 0])
-
-    u = np.zeros(len(x))
-
-    for i in range(1, len(x)):
-        b[0] = f(x[i])
-        u[i] = LinearSystemSolver(A, b).Thomas()[2]
-
-    
-    fig, ax = plt.subplots()
-    ax.plot(x, u, label="u(x)")
-
-    plt.show()
-    """

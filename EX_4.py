@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
-from LinearSystemSolver import LinearSystemSolver as ls
+from LinearSystems import LinearSystem as ls
 from RootFinding import RootFinding as rf
 from EigenvaluesDecomposition import EigenvaluesDecomposition as ed
 
